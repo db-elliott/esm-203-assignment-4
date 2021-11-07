@@ -1,0 +1,109 @@
+---
+title: "Assignment 5"
+author: "Deanna Elliott"
+date: "11/6/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(janitor)
+library(here)
+library(kableExtra)
+library(lubridate)
+```
+
+## Overview
+
+A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last so you know what’s contained in the report.
+
+
+## Data & Analysis
+
+A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
+
+
+## Juvenile Hare Initial Investigation
+
+### Annual Juvenile Hare Trap Counts
+
+```{r, include = FALSE}
+
+hares <- read_csv(here("data", "bonanza_hares.csv")) %>% 
+  mutate(date = mdy(date)) %>% 
+  mutate(year = year(date))
+
+ann_traps <- hares %>% 
+  group_by(year) %>% 
+  summarize(sample = n())
+
+hares %>% 
+  summary(sample = n(trap))
+
+ann_traps %>% 
+  summarize(min = min(sample), max = max(sample), 
+            median = median(sample), mean = mean(sample))
+hares %>% 
+  group_by(session_id) %>% 
+  summarize(sample = n())
+```
+
+```{r}
+
+ggplot(data = ann_traps,
+       aes(x = year, y = sample)) +
+  geom_col(fill = "cadetblue2", color = "black") +
+  labs(x = "Year", y = "Sample Size")
+
+```
+
+**Figure 1. Juvenile snowshoe hare trap count by year.** Over the course of 15 years (1998-2012), the Bonanza Creek Long Term Ecological Research Network collected trap observations of juvenile snowshoe hares. The minimum trap count was 38, occurring in 2002, while the maximum trap count was 410 occurring in 2009. The mean trap count value over the course of the study was 213, while the median was 179. In the early 2000s, there were two years of high trap count numbers, before a sharp fall off. A couple of years after that, hare traps counts began rising steadily, reaching approximately 400 each year between 2009 and 2011. The number once again fell dramatically in 2012.
+
+
+#### Suggestions
+These are absolute counts, but this count is also impacted by effort. The number of days spent observing each year swings wildly between 1 and 171. Moving forward, I would suggest that the study regulate the number of observers and the number of days spent observing per year in order to standardize the juvenile hare population in future analyses.
+
+
+### Visualize Juvenile Hare Weights
+Create a finalized data visualization (or visualizations) in which you compare **juvenile hare weights by sex and site (grid)** (ignore other variables). You should include groups where these variables are not recorded (`NA`). Include finalized figure captions below your visualization(s).
+
+Then, in 2 - 3 sentences below your visualization(s) describe in text the main takeaways that you would want the audience to understand from your figures.
+
+Note: There are multiple ways to visualize these comparisons. We encourage you to think carefully then make decisions about how to visualize these comparisons, including:
+
+Can I use faceting to simplify the comparisons into manageable pieces?
+Am I showing the audience the data, summary statistics, or both?
+Have I updated graph labels, headers in facets, etc. to make it as straightforward as possible for viewers?
+Have I simplified and finalized my data visualization(s) to include components that are useful for the audience?
+
+
+## Juvenile Weight Comparison
+### Male & Female Hares
+Further compare mean weights for **juvenile male and female snowshoe hares** included in this study. In this section, you should include:
+
+A finalized table containing the mean, standard deviation, and sample size for male and female juvenile snowshoe hares, with a table caption (remember, a table caption should be placed *above* the table in your report)
+A 2 - 3 sentence comprehensive statement of the means comparison, including at least:
+The actual difference in means
+Effect size (Cohen's *d*) (see effsize::cohen.d() example in the Lab 5 key)
+Outcome of an unpaired two-sample t-test
+ 
+Note: Exploratory graphs (e.g. histograms, QQ-plots) to explore assumptions of your t-test should not show up in your final knitted document, but you DO still need to create and think about them to determine whether a t-test is appropriate. If you want keep the code chunk containing those exploratory visualizations in your .Rmd but not appear in the knitted doc, you can add `include = FALSE` in the code chunk header.
+
+
+## Relationship: Juvenile Weight & Hind Foot Length
+ Explore the relationship between juvenile snowshoe hare hind foot length (variable `hindft`, recorded in millimeters), and weight. Include all juvenile hares in the study. Create a final visualization of juvenile hare hind foot length versus weight. Include a figure caption.
+
+Upon seeing your graph, your “boss” tells you to try out linear regression to describe how juvenile snowshoe hare weight changes with respect to hind foot length. Try it out (the only variables you are expected to include here are hind foot length and weight, using data for all juvenile hares in the data, e.g. you are not expected to explore impacts of sex, site, etc.), and check the model diagnostics.
+
+In 2 - 3 sentences below your figure, describe the outcome of your linear regression exploration (e.g. slope interpretation, R2 value, and Pearson's r correlation) and touch briefly on which assumption(s) of linear regression may be a concern, and additional thoughts you have about how well (or not well…) the linear model describes the relationship. What worries you? 
+
+
+## Summary
+ Include a very short summary describing your main findings from your juvenile hares exploration (bullet points are fine)
+
+
+## Citations
+
+ Include citations (professionally formatted), including the data citation and any other resources that were references in your mini report. 
