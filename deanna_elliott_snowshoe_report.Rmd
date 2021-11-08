@@ -8,44 +8,46 @@ output: html_document
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
+options(digits = 4)
+
 library(tidyverse)
 library(janitor)
 library(here)
 library(kableExtra)
 library(lubridate)
+library(effsize)
 ```
 
-## Overview
+## **Overview**
 
 A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last so you know what’s contained in the report.
 
 
-## Data & Analysis
+## **Data & Analysis**
 
 A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
 
 
-## Juvenile Hare Initial Investigation
+## **Juvenile Hare Initial Investigation**
 
 ### Annual Juvenile Hare Trap Counts
 
 ```{r, include = FALSE}
 
-hares <- read_csv(here("data", "bonanza_hares.csv")) %>% 
+juv_hares <- read_csv(here("data", "bonanza_hares.csv")) %>% 
+  filter(age == "j") %>% 
   mutate(date = mdy(date)) %>% 
-  mutate(year = year(date))
+  mutate(year = year(date)) 
 
-ann_traps <- hares %>% 
+ann_traps <- juv_hares %>% 
   group_by(year) %>% 
   summarize(sample = n())
-
-hares %>% 
-  summary(sample = n(trap))
 
 ann_traps %>% 
   summarize(min = min(sample), max = max(sample), 
             median = median(sample), mean = mean(sample))
-hares %>% 
+
+days_spent <- juv_hares %>% 
   group_by(session_id) %>% 
   summarize(sample = n())
 ```
@@ -59,40 +61,91 @@ ggplot(data = ann_traps,
 
 ```
 
-**Figure 1. Juvenile snowshoe hare trap count by year.** Over the course of 15 years (1998-2012), the Bonanza Creek Long Term Ecological Research Network collected trap observations of juvenile snowshoe hares. The minimum trap count was 38, occurring in 2002, while the maximum trap count was 410 occurring in 2009. The mean trap count value over the course of the study was 213, while the median was 179. In the early 2000s, there were two years of high trap count numbers, before a sharp fall off. A couple of years after that, hare traps counts began rising steadily, reaching approximately 400 each year between 2009 and 2011. The number once again fell dramatically in 2012.
+**Figure 1. Juvenile snowshoe hare trap count by year.** Over the course of 15 years (1998-2012), the Bonanza Creek Long Term Ecological Research Network collected trap observations of snowshoe hares. The minimum trap count of juvenile hares per year was `r min(ann_traps$sample)`, occurring in 2010, while the maximum trap count was `r max(ann_traps$sample)`, occurring in 1999. The mean trap count value over the course of the study was 31, while the median was 18. After 1999, there was a sharp drop off in juvenile count by almost half, and the numbers never recovered across the life of available data. There were spikes in 2005 and 2008, but even those did not reach the value of 2000, let alone 1999. Based on this data, it seems the count of trapped juvenile hares is fairly low annually in comparison.
 
+.
 
-#### Suggestions
-These are absolute counts, but this count is also impacted by effort. The number of days spent observing each year swings wildly between 1 and 171. Moving forward, I would suggest that the study regulate the number of observers and the number of days spent observing per year in order to standardize the juvenile hare population in future analyses.
+##### **Suggestions**
+These are absolute counts, but these counts are also impacted by effort. The number of days spent observing each year swings between `r min(days_spent$sample)` and `r max(days_spent$sample)`. Moving forward, I would suggest that the study regulate the number of observers and the number of days spent observing per year in order to standardize the juvenile hare population count in future analyses.
 
 
 ### Visualize Juvenile Hare Weights
-Create a finalized data visualization (or visualizations) in which you compare **juvenile hare weights by sex and site (grid)** (ignore other variables). You should include groups where these variables are not recorded (`NA`). Include finalized figure captions below your visualization(s).
 
-Then, in 2 - 3 sentences below your visualization(s) describe in text the main takeaways that you would want the audience to understand from your figures.
+```{r}
 
-Note: There are multiple ways to visualize these comparisons. We encourage you to think carefully then make decisions about how to visualize these comparisons, including:
+site_hares <-juv_hares %>% 
+  mutate(grid_full = case_when(
+    grid == "bonrip" ~ "Riparian",
+    grid == "bonmat" ~ "Mature",
+    grid == "bonbs" ~ "Black Spruce")) %>% 
+  mutate(sex = case_when(
+    sex == "f" ~ "Female",
+    sex == "m" ~ "Male",
+    is.na(sex) == TRUE ~ "Unknown"))
 
-Can I use faceting to simplify the comparisons into manageable pieces?
-Am I showing the audience the data, summary statistics, or both?
-Have I updated graph labels, headers in facets, etc. to make it as straightforward as possible for viewers?
-Have I simplified and finalized my data visualization(s) to include components that are useful for the audience?
+ggplot(data = site_hares,
+       aes(x = sex, y = weight, color= sex)) +
+  scale_color_manual(values = c("violetred", "royalblue1", "seagreen4")) +
+  geom_jitter(na.rm = FALSE) +
+  theme(legend.position = "none") +
+  facet_wrap(~ grid_full) +
+  labs(x = "Sex", y = "Weight (g)")
+```
+
+**Figure 2. Juvenile snowshoe hare weights by sex and site.** Three sites in the Bonanza Creek LTER were observed for juvenile snowshoe hares. The riparian site yielded the highest number of both male and female hares, followed by the mature site and the black spruce site. Weights of hares at each site follow a similar distribution pattern regardless of sex. The riparian site had a small number of weight observations above the maximums of mature and black spruce. The few observed animals of unknown sex fall into the general distribution, excepting three at the riparian site that fall under the otherwise lightest weights.
 
 
-## Juvenile Weight Comparison
+## **Juvenile Weight Comparison**
 ### Male & Female Hares
-Further compare mean weights for **juvenile male and female snowshoe hares** included in this study. In this section, you should include:
 
-A finalized table containing the mean, standard deviation, and sample size for male and female juvenile snowshoe hares, with a table caption (remember, a table caption should be placed *above* the table in your report)
-A 2 - 3 sentence comprehensive statement of the means comparison, including at least:
-The actual difference in means
-Effect size (Cohen's *d*) (see effsize::cohen.d() example in the Lab 5 key)
-Outcome of an unpaired two-sample t-test
+```{r}
+
+site_hares %>% 
+  group_by(sex) %>%
+  filter(sex %in% c("Male", "Female")) %>% 
+  summarize(mean = mean(weight, na.rm = TRUE), stdev = sd(weight, na.rm = TRUE), sample = n()) %>% 
+  kbl(col.names = c("Sex", "Mean Weight (g)", "Standard Devation (g)", "Sample Size"), caption = "<b> Table 1. Summary statistics for snowshoe hare weight.</b> Mean and standard deviation in g, with sample sizes of male and female juvenile snowshoe hares observed at the Bonanza Creek LTER.") %>% 
+  kable_classic()
+```
  
-Note: Exploratory graphs (e.g. histograms, QQ-plots) to explore assumptions of your t-test should not show up in your final knitted document, but you DO still need to create and think about them to determine whether a t-test is appropriate. If you want keep the code chunk containing those exploratory visualizations in your .Rmd but not appear in the knitted doc, you can add `include = FALSE` in the code chunk header.
+```{r, exploration of assumptions, include = FALSE}
+
+weight_male <- site_hares %>% 
+  filter(sex == "Male") %>% 
+  drop_na(weight) %>% 
+  pull(weight)
+
+weight_female <- site_hares %>% 
+  filter(sex == "Female") %>% 
+  drop_na(weight) %>% 
+  pull(weight)
 
 
-## Relationship: Juvenile Weight & Hind Foot Length
+hist(weight_female) #pretty normal
+hist(weight_male) #normal-ish
+
+ggplot(data = site_hares, aes(sample = weight)) +
+  geom_qq() +
+  facet_wrap(~ sex)
+
+# female data looks pretty normal, male data looks normal enough
+# I can use a t-test
+```
+
+```{r}
+
+t_test <- t.test(weight_female, weight_male)
+
+cd <- cohen.d(weight_female, weight_male)
+```
+
+.
+
+The mean weight of male snowshoe hares at Bonanza LTER is 90.5 g more than the mean female weight; this is a 10.05% difference. If these samples were taken from populations with the same mean, there is a `r round(t_test$p.value*100, 2)`% chance of finding sample means *at least* as different as these. The means of male and female weights did not differ significantly (t-test; t = `r (t_test$statistic)`, p = `r round(t_test$p.value, 4)`). Additionally, the effect size of the difference is small (Cohen's d; d = `r round(cd$estimate, 2)`).
+
+
+## **Relationship: Juvenile Weight & Hind Foot Length**
+
  Explore the relationship between juvenile snowshoe hare hind foot length (variable `hindft`, recorded in millimeters), and weight. Include all juvenile hares in the study. Create a final visualization of juvenile hare hind foot length versus weight. Include a figure caption.
 
 Upon seeing your graph, your “boss” tells you to try out linear regression to describe how juvenile snowshoe hare weight changes with respect to hind foot length. Try it out (the only variables you are expected to include here are hind foot length and weight, using data for all juvenile hares in the data, e.g. you are not expected to explore impacts of sex, site, etc.), and check the model diagnostics.
@@ -100,10 +153,10 @@ Upon seeing your graph, your “boss” tells you to try out linear regression t
 In 2 - 3 sentences below your figure, describe the outcome of your linear regression exploration (e.g. slope interpretation, R2 value, and Pearson's r correlation) and touch briefly on which assumption(s) of linear regression may be a concern, and additional thoughts you have about how well (or not well…) the linear model describes the relationship. What worries you? 
 
 
-## Summary
+## **Summary**
  Include a very short summary describing your main findings from your juvenile hares exploration (bullet points are fine)
 
 
-## Citations
+## **Citations**
 
  Include citations (professionally formatted), including the data citation and any other resources that were references in your mini report. 
