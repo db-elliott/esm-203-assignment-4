@@ -16,6 +16,7 @@ library(here)
 library(kableExtra)
 library(lubridate)
 library(effsize)
+library(broom)
 ```
 
 ## **Overview**
@@ -148,7 +149,42 @@ The mean weight of male snowshoe hares at Bonanza LTER is 90.5 g more than the m
 
  Explore the relationship between juvenile snowshoe hare hind foot length (variable `hindft`, recorded in millimeters), and weight. Include all juvenile hares in the study. Create a final visualization of juvenile hare hind foot length versus weight. Include a figure caption.
 
-Upon seeing your graph, your “boss” tells you to try out linear regression to describe how juvenile snowshoe hare weight changes with respect to hind foot length. Try it out (the only variables you are expected to include here are hind foot length and weight, using data for all juvenile hares in the data, e.g. you are not expected to explore impacts of sex, site, etc.), and check the model diagnostics.
+```{r}
+
+ggplot(data = juv_hares, 
+       aes(y = weight, x = hindft)) +
+  geom_jitter(aes(color = age)) +
+  geom_smooth(method = "lm") +
+  scale_color_manual(values = "darkblue") + 
+  theme(legend.position = "none",
+        panel.background = element_rect(fill = "cadetblue2", colour = "cadetblue",
+                                size = 2, linetype = "solid"),
+        panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                colour = "white"), 
+        panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                colour = "white")) +
+  labs(x = "Hindfoot Length (mm)", y = "Weight (g)")
+```
+
+
+**Figure 3. Juvenile snowshoe hare hind foot length vs weight.** Measurements of juvenile hares in the Bonanza Creek LTER seem to show a weakly positive correlation between hind foot length (in mm) and weight (in g). Generally, as the length of the hind foot increases, so does the animal's weight.
+
+```{r}
+
+hares_lm <- lm(weight ~ hindft, data = juv_hares) #create linear model
+summary(hares_lm)
+# Coef = -279.34 (intercept), 9.52 (hindft = slope)
+
+hares_lm_tidy <- tidy(hares_lm) #get lm stats
+
+hares_lm_glance <- glance(hares_lm) #get model fit & stat significance
+# r-sq = 0.2988, adj r-sq = 0.2959
+# p-value = 8.458e-21, reject null
+
+cor.test(hindft, weight)
+```
+
+The linear regression model of juvenile hare hind foot length versus weight shows a slope of `r round(hares_lm$coefficients [2], 2)` g/mm, meaning that, on average, we would expect to see a `r round(hares_lm$coefficients [2], 2)` g increase in weight for every 1 mm increase in hind foot length. The adjusted R-squared value shows that `r round(hares_lm_glance$adj.r.squared, 3)*100`% of the variance in weight is explained by hind foot length.
 
 In 2 - 3 sentences below your figure, describe the outcome of your linear regression exploration (e.g. slope interpretation, R2 value, and Pearson's r correlation) and touch briefly on which assumption(s) of linear regression may be a concern, and additional thoughts you have about how well (or not well…) the linear model describes the relationship. What worries you? 
 
