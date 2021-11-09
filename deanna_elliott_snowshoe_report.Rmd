@@ -21,12 +21,12 @@ library(broom)
 
 ## **Overview**
 
-A 4 - 5 sentence "mini-introduction" to what this study is exploring, including basic background information about the subject, site and study (with citations as needed), and a brief overview of what is included in the exploratory report. You should probably do this last so you know what’s contained in the report.
+This report provides an exploratory overview of differences in juvenile snowshoe hare (*Lepus americanus*) sizes for three locations (black spruce stand, mature forest, and riparian flood zone) observed within the Bananza Creek Long Term Ecological Research (LTER) network site from 1999 - 2012 (Kielland et al. 2017). Specifically, weights are compared sexes, and the relationship(s) between hind foot length and body mass explored.
 
 
 ## **Data & Analysis**
 
-A 3 - 4 sentence section in which you briefly describe the data, including citation & credit as needed, and provide an overview of the main analysis, statistical methods and tools used.
+Snowshoe hare (*Lepus americanus*) size measurements were collected and made available by Dr. Knut Kielland and colleagues at the Bonanza Creek LTER network site in Fairbanks, Alaska. The data contain observations for 378 juvenile hares, collected over 15 years (1999 - 2012). Following exploratory data visualization, weights between male and female hares are analyzed by two-sample t-tests using a significance level (α) of 0.05 throughout. Differences between groups are described by Cohen’s d effect size. The relationship between hind foot length and body mass is explored by simple linear regression. All analyses are in R version 4.1.1 using RStudio version 1.4.1717.
 
 
 ## **Juvenile Hare Initial Investigation**
@@ -58,7 +58,9 @@ days_spent <- juv_hares %>%
 ggplot(data = ann_traps,
        aes(x = year, y = sample)) +
   geom_col(fill = "cadetblue2", color = "black") +
-  labs(x = "Year", y = "Sample Size")
+  labs(x = "Year", y = "Sample Size") +
+  theme_dark() +
+  scale_x_continuous(breaks = seq(from = 1999, to = 2012, by = 2))
 
 ```
 
@@ -85,18 +87,21 @@ site_hares <-juv_hares %>%
     is.na(sex) == TRUE ~ "Unknown"))
 
 ggplot(data = site_hares,
-       aes(x = sex, y = weight, color= sex)) +
-  scale_color_manual(values = c("violetred", "royalblue1", "seagreen4")) +
-  geom_jitter(na.rm = FALSE) +
-  theme(legend.position = "none") +
+       aes(x = sex, y = weight, fill= sex)) +
+  scale_fill_manual(values = c("violetred", "royalblue1", "seagreen2")) +
+  geom_jitter(color = "black", pch = 21, size = 2,
+              na.rm = FALSE) +
   facet_wrap(~ grid_full) +
-  labs(x = "Sex", y = "Weight (g)")
+  labs(x = "Sex", y = "Weight (g)") +
+  theme_bw() +
+  theme(legend.position = "none")
 ```
 
-**Figure 2. Juvenile snowshoe hare weights by sex and site.** Three sites in the Bonanza Creek LTER were observed for juvenile snowshoe hares. The riparian site yielded the highest number of both male and female hares, followed by the mature site and the black spruce site. Weights of hares at each site follow a similar distribution pattern regardless of sex. The riparian site had a small number of weight observations above the maximums of mature and black spruce. The few observed animals of unknown sex fall into the general distribution, excepting three at the riparian site that fall under the otherwise lightest weights.
+**Figure 2. Juvenile snowshoe hare weights by sex and site.** Three sites in the Bonanza Creek LTER were observed for juvenile snowshoe hares. The riparian site yielded the highest number of both male and female hares, followed by the mature site and the black spruce site. Weights of hares at each site follow a similar distribution pattern regardless of sex. The riparian site had a small number of weight observations above the maximums of mature and black spruce. The few observed animals of unknown sex fall into the general distribution, excepting three at the riparian site that fall under the otherwise smallest weights.
 
 
 ## **Juvenile Weight Comparison**
+
 ### Male & Female Hares
 
 ```{r}
@@ -142,20 +147,19 @@ cd <- cohen.d(weight_female, weight_male)
 
 .
 
-The mean weight of male snowshoe hares at Bonanza LTER is 90.5 g more than the mean female weight; this is a 10.05% difference. If these samples were taken from populations with the same mean, there is a `r round(t_test$p.value*100, 2)`% chance of finding sample means *at least* as different as these. The means of male and female weights did not differ significantly (t-test; t = `r (t_test$statistic)`, p = `r round(t_test$p.value, 4)`). Additionally, the effect size of the difference is small (Cohen's d; d = `r round(cd$estimate, 2)`).
+The mean weight of male snowshoe hares at Bonanza LTER is 90.5 g greater than the mean female weight; this is a 10.05% difference. If these samples were taken from populations with the same mean, there is a `r round(t_test$p.value*100, 2)`% chance of finding sample means *at least* as different as these, which is very remote. Additionally, the means of male and female weights do differ significantly (t-test | t(`r round(t_test$parameter, 0)`) = `r (t_test$statistic)`, p = `r round(t_test$p.value, 4)`). However, the effect size of the difference is small (Cohen's d |  d = `r round(cd$estimate, 2)`).
 
 
 ## **Relationship: Juvenile Weight & Hind Foot Length**
-
- Explore the relationship between juvenile snowshoe hare hind foot length (variable `hindft`, recorded in millimeters), and weight. Include all juvenile hares in the study. Create a final visualization of juvenile hare hind foot length versus weight. Include a figure caption.
 
 ```{r}
 
 ggplot(data = juv_hares, 
        aes(y = weight, x = hindft)) +
-  geom_jitter(aes(color = age)) +
+  geom_jitter(aes(fill = age), 
+              color = "black", pch = 22, size =2) +
   geom_smooth(method = "lm") +
-  scale_color_manual(values = "darkblue") + 
+  scale_fill_manual(values = "darkblue") + 
   theme(legend.position = "none",
         panel.background = element_rect(fill = "cadetblue2", colour = "cadetblue",
                                 size = 2, linetype = "solid"),
@@ -167,12 +171,13 @@ ggplot(data = juv_hares,
 ```
 
 
-**Figure 3. Juvenile snowshoe hare hind foot length vs weight.** Measurements of juvenile hares in the Bonanza Creek LTER seem to show a weakly positive correlation between hind foot length (in mm) and weight (in g). Generally, as the length of the hind foot increases, so does the animal's weight.
+**Figure 3. Juvenile snowshoe hare hind foot length vs weight.** Measurements of juvenile hares in the Bonanza Creek LTER show a moderately positive correlation between hind foot length (in mm) and weight (in g). Generally, as the length of the hind foot increases, so does the animal's weight.
 
-```{r}
+.
+```{r, include = FALSE}
 
 hares_lm <- lm(weight ~ hindft, data = juv_hares) #create linear model
-summary(hares_lm)
+
 # Coef = -279.34 (intercept), 9.52 (hindft = slope)
 
 hares_lm_tidy <- tidy(hares_lm) #get lm stats
@@ -181,12 +186,14 @@ hares_lm_glance <- glance(hares_lm) #get model fit & stat significance
 # r-sq = 0.2988, adj r-sq = 0.2959
 # p-value = 8.458e-21, reject null
 
-cor.test(hindft, weight)
+pr<- cor.test(juv_hares$hindft, juv_hares$weight)
+
+plot(hares_lm)
 ```
 
-The linear regression model of juvenile hare hind foot length versus weight shows a slope of `r round(hares_lm$coefficients [2], 2)` g/mm, meaning that, on average, we would expect to see a `r round(hares_lm$coefficients [2], 2)` g increase in weight for every 1 mm increase in hind foot length. The adjusted R-squared value shows that `r round(hares_lm_glance$adj.r.squared, 3)*100`% of the variance in weight is explained by hind foot length.
+The linear regression model of juvenile hare hind foot length versus weight shows a slope of `r round(hares_lm$coefficients [2], 2)` g/mm, meaning that, on average, we would expect to see a `r round(hares_lm$coefficients [2], 2)` g increase in weight for every 1 mm increase in hind foot length. The adjusted R-squared value shows that `r round(hares_lm_glance$adj.r.squared, 3)*100`% of the variance in weight is explained by hind foot length. The Pearson's r test showed an association estimate of `r round(pr$estimate, 2)`, meaning there is a moderate positive correlation between our two variables. 
 
-In 2 - 3 sentences below your figure, describe the outcome of your linear regression exploration (e.g. slope interpretation, R2 value, and Pearson's r correlation) and touch briefly on which assumption(s) of linear regression may be a concern, and additional thoughts you have about how well (or not well…) the linear model describes the relationship. What worries you? 
+The residuals for this model are fairly normal, enough that I would say it meets the assumption of normality required for linear regression, and there is no reason to suspect serial correlation in error. However, based on exploratory graphs of residuals versus fitted values, the residuals are not homoscedastic, which is an important assumption. This means our predictions for uncertainty in this model may be over- or underestimated. Additionally, the data spread is only vaguely linear. This makes me uncertain that the linear model is a good descriptor of the relationship between hind foot length and weight in juvenile hares at Bonanza Creek LTER.
 
 
 ## **Summary**
@@ -195,4 +202,4 @@ In 2 - 3 sentences below your figure, describe the outcome of your linear regres
 
 ## **Citations**
 
- Include citations (professionally formatted), including the data citation and any other resources that were references in your mini report. 
+Kielland, K., F.S. Chapin, R.W. Ruess, and Bonanza Creek LTER. 2017. Snowshoe hare physical data in Bonanza Creek Experimental Forest: 1999-Present ver 22. Environmental Data Initiative. https://doi.org/10.6073/pasta/03dce4856d79b91557d8e6ce2cbcdc14 
