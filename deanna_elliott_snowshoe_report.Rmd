@@ -21,7 +21,7 @@ library(broom)
 
 ## **Overview**
 
-This report provides an exploratory overview of differences in juvenile snowshoe hare (*Lepus americanus*) sizes for three locations (black spruce stand, mature forest, and riparian flood zone) observed within the Bananza Creek Long Term Ecological Research (LTER) network site from 1999 - 2012 (Kielland et al. 2017). Specifically, weights are compared sexes, and the relationship(s) between hind foot length and body mass explored.
+This report provides an exploratory overview of differences in juvenile snowshoe hare (*Lepus americanus*) sizes for three locations (black spruce stand, mature forest, and riparian flood zone) observed within the Bananza Creek Long Term Ecological Research (LTER) network site from 1999 - 2012 (Kielland et al. 2017). Specifically, weights are compared between sexes, and the relationship between hind foot length and body mass is explored.
 
 
 ## **Data & Analysis**
@@ -44,7 +44,7 @@ ann_traps <- juv_hares %>%
   group_by(year) %>% 
   summarize(sample = n())
 
-ann_traps %>% 
+trap_sum <- ann_traps %>% 
   summarize(min = min(sample), max = max(sample), 
             median = median(sample), mean = mean(sample))
 
@@ -64,7 +64,7 @@ ggplot(data = ann_traps,
 
 ```
 
-**Figure 1. Juvenile snowshoe hare trap count by year.** Over the course of 15 years (1998-2012), the Bonanza Creek Long Term Ecological Research Network collected trap observations of snowshoe hares. The minimum trap count of juvenile hares per year was `r min(ann_traps$sample)`, occurring in 2010, while the maximum trap count was `r max(ann_traps$sample)`, occurring in 1999. The mean trap count value over the course of the study was 31, while the median was 18. After 1999, there was a sharp drop off in juvenile count by almost half, and the numbers never recovered across the life of available data. There were spikes in 2005 and 2008, but even those did not reach the value of 2000, let alone 1999. Based on this data, it seems the count of trapped juvenile hares is fairly low annually in comparison.
+**Figure 1. Juvenile snowshoe hare trap count by year.** Over the course of 15 years (1998-2012), the Bonanza Creek Long Term Ecological Research network site collected trap observations of snowshoe hares. The minimum trap count of juvenile hares per year was `r min(ann_traps$sample)`, occurring in 2010, while the maximum trap count was `r max(ann_traps$sample)`, occurring in 1999. The mean trap count value over the course of the study was `r round(trap_sum$mean, 0)`, while the median was `r round(trap_sum$median, 0)`. After 1999, there was a sharp drop off in juvenile count by almost half, and the numbers never recovered across the life of the available data. There were spikes in 2005 and 2008, but even those did not reach the value of 2000, let alone 1999. Based on this data, it seems the count of trapped juvenile hares is fairly low annually in comparison to 1999.
 
 .
 
@@ -97,7 +97,7 @@ ggplot(data = site_hares,
   theme(legend.position = "none")
 ```
 
-**Figure 2. Juvenile snowshoe hare weights by sex and site.** Three sites in the Bonanza Creek LTER were observed for juvenile snowshoe hares. The riparian site yielded the highest number of both male and female hares, followed by the mature site and the black spruce site. Weights of hares at each site follow a similar distribution pattern regardless of sex. The riparian site had a small number of weight observations above the maximums of mature and black spruce. The few observed animals of unknown sex fall into the general distribution, excepting three at the riparian site that fall under the otherwise smallest weights.
+**Figure 2. Juvenile snowshoe hare weights by sex and site.** Three sites in the Bonanza Creek LTER were observed for juvenile snowshoe hares. The riparian site yielded the highest number of both male and female hares, followed by the mature site and the black spruce site. Weights of hares at each site seemingly follow a similar distribution pattern, with male weights appearing to be slightly higher than female weights. The riparian site had a small number of weight observations above the maximums of mature and black spruce, mostly male. The few observed animals of unknown sex fall into these general distributions, excepting three at the riparian site that fall under the otherwise smallest weights. Data: Kielland et al. (2017).
 
 
 ## **Juvenile Weight Comparison**
@@ -147,7 +147,7 @@ cd <- cohen.d(weight_female, weight_male)
 
 .
 
-The mean weight of male snowshoe hares at Bonanza LTER is 90.5 g greater than the mean female weight; this is a 10.05% difference. If these samples were taken from populations with the same mean, there is a `r round(t_test$p.value*100, 2)`% chance of finding sample means *at least* as different as these, which is very remote. Additionally, the means of male and female weights do differ significantly (t-test | t(`r round(t_test$parameter, 0)`) = `r (t_test$statistic)`, p = `r round(t_test$p.value, 4)`). However, the effect size of the difference is small (Cohen's d |  d = `r round(cd$estimate, 2)`).
+The mean weight of male snowshoe hares at Bonanza LTER is `r t_test$estimate[2] - t_test$estimate[1]`g greater than the mean female weight; this is a 10.05% difference. If these samples were taken from populations with the same mean, there is a `r round(t_test$p.value*100, 2)`% chance of finding sample means *at least* as different as these, which is very remote. Additionally, the means of male and female weights do differ significantly (t-test | t(`r round(t_test$parameter, 0)`) = `r (t_test$statistic)`, p = `r round(t_test$p.value, 4)`). However, the effect size of the difference is small (Cohen's d |  d = `r round(cd$estimate, 2)`).
 
 
 ## **Relationship: Juvenile Weight & Hind Foot Length**
@@ -170,8 +170,7 @@ ggplot(data = juv_hares,
   labs(x = "Hindfoot Length (mm)", y = "Weight (g)")
 ```
 
-
-**Figure 3. Juvenile snowshoe hare hind foot length vs weight.** Measurements of juvenile hares in the Bonanza Creek LTER show a moderately positive correlation between hind foot length (in mm) and weight (in g). Generally, as the length of the hind foot increases, so does the animal's weight.
+**Figure 3. Juvenile snowshoe hare hind foot length vs weight.** Measurements of juvenile hares in the Bonanza Creek LTER show a moderately positive correlation between hind foot length (in mm) and weight (in g). Generally, as the length of the hind foot increases, so does the animal's weight. Linear model summary: β1 = `r round(hares_lm$coefficients [2], 2)` g mm-1, p < 0.001, R2 =  `r round(hares_lm_glance$adj.r.squared, 3), Pearson’s r = `r round(pr$estimate, 2)`). Data: Kielland et al. (2017).
 
 .
 ```{r, include = FALSE}
@@ -197,7 +196,18 @@ The residuals for this model are fairly normal, enough that I would say it meets
 
 
 ## **Summary**
- Include a very short summary describing your main findings from your juvenile hares exploration (bullet points are fine)
+
+Exploratory data analysis reveals the following initial findings:
+
+- Juvenile snowshoe hare population numbers seem to have fallen since 1999, though this could be due to inconsistency in trapping efforts per year.
+- The riparian site yielded the highest number of trapped juveniles, both male and female
+- Male hare weight was higher than female hare weight; The difference between groups was significant, but the effect size was small.
+- Hind foot length appears moderately positively correlated with body mass in juvenile hares; The relationship (by simple linear regression) is significant, with a slope (expected average increase in weight with a 1 mm increase in hind foot length) of shows a slope of `r round(hares_lm$coefficients [2], 2)` g/mm.
+
+#### **Next Steps**:
+
+- Compare hind foot lengths statistically (one-way ANOVA), including juvenile hare sex as a covariate
+- Multiple linear regression to understand the relationship between sex, hind foot length, and weight
 
 
 ## **Citations**
